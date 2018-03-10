@@ -80,9 +80,9 @@ class CSSS:
             
             ## TODO: TRY CATCH TO ENSURE regularizeTheta WORKS AND RETURNS SCALAR
             regThetaObj = regularizeTheta(model['theta']) * beta
-        elif regularizeTheta.lower() == 'sse':
+        elif regularizeTheta.lower() == 'l2':
             ## Sum square errors. 
-            regThetaObj = cvp.sum_squares(model['theta'] * np.sqrt(beta)) 
+            regThetaObj = cvp.norm(model['theta'] * beta) 
         elif regularizeTheta.lower() == 'l1':
             regThetaObj = cvp.norm(model['theta'] * beta, 1) 
         else:
@@ -102,7 +102,7 @@ class CSSS:
             ## User can input their own function to regularize the source signal. 
             # Must input a cvxpy variable vector and output a scalar.
             regSourceObj = regularizeSource(model['source']) * gamma
-        elif regularizeSource.lower() == 'diff1_sse':
+        elif regularizeSource.lower() == 'diff1_ss':
             regSourceObj = cvp.sum_squares(cvp.diff(model['source'])) * gamma
         else: 
             regSourceObj = 0
