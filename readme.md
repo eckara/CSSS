@@ -71,5 +71,11 @@ def customReg(x):
 CSSSobject.addSource(X1, name = 'y1', regularizeSource=customReg)  ## Add a model for source signal y1
 ```
 
-### Anatomy of a source model
+#### Anatomy of a source model
 TODO.  Inlcude all attributes of a source, how to acceess the cvxpy variables to add constraints etc. 
+
+### Adding Constraints
+
+### Fitting Models
+
+### Distributed Optimizzation
