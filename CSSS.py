@@ -168,16 +168,13 @@ class CSSS:
         overall_complexity=0
         if verbose:
             print('Verbose on')
+        u=np.zeros((self.N,1))
         for k in range(0, MaxIter):
             for name, model in self.models.items():
                 if k==0:
                     ### Initialize sources and old sources to zeros
-                    #model['admmSource']=cvp.Variable(self.N,1)
                     model['admmSource']=np.zeros((self.N,1))
-                    model['admmTheta']=np.zeros((model['order'],1))
-                    #model['admmTheta']=cvp.Variable(model['order'],1)
-                    y=np.zeros((self.N,1))
-                    u=(1/rho)*y
+                    #model['admmTheta']=np.zeros((model['order'],1))
                     overall_complexity=overall_complexity+model['order']
                 else:
                     ### Update each source by keeping the other sources constant
@@ -189,7 +186,7 @@ class CSSS:
                         if name_sub!=name:
                             # residuals = (model['admmSource']
                             #     - (model['regressor'].dot( model['admmTheta'])))
-                            sum_sources = sum_sources + model['admmSource']
+                            sum_sources = sum_sources + model_sub['admmSource']
                         else:
                             ### This is the only source
                             ### we are solving for at each update
@@ -203,6 +200,7 @@ class CSSS:
                                 con.append(source_update >= model['lb'])
                             if model['ub'] is not None:
                                 con.append(source_update <= model['ub'])
+
                             sum_sources = sum_sources + source_update
                             obj=cvp.sum_squares(residuals) * model['alpha']
 
@@ -218,13 +216,15 @@ class CSSS:
             if k==0:
                 if verbose:
                     print('Initialized all sources')
-                    print('iter num','norm_resid','last_dual_objective')
+                    print("iter_num","s_norm","eps_dual","r_norm","eps_pri")
+
             else:
                 dual_objective.append(last_obj)
                 u=u+(sum_sources-aggregateSignalVector).value
 
                 norm_resid=cvp.norm(sum_sources-aggregateSignalVector).value
-                eps_pri = np.sqrt(overall_complexity)*ABSTOL + RELTOL*max(np.linalg.norm(sum_sources.value),np.linalg.norm(-aggregateSignalVector));
+                eps_pri = np.sqrt(overall_complexity)*ABSTOL
+                + RELTOL*max(np.linalg.norm(sum_sources.value),np.linalg.norm(-aggregateSignalVector));
                 norm_resid_equality.append(norm_resid)
 
                 s_norm=np.linalg.norm(-rho*source_update_diff)
@@ -232,11 +232,11 @@ class CSSS:
 
 
                 if (verbose):
-                    print(k, norm_resid,last_obj,s_norm,eps_dual,norm_resid,eps_pri)
+                    print(k, s_norm,eps_dual,norm_resid,eps_pri)
 
 
                 if (s_norm<eps_dual) and (norm_resid<eps_pri):
                     break
                 #print(np.transpose(y))
                 #print(k, dual_objective)
-        return dual_objective,norm_resid_equality,y
+        return dual_objective,norm_resid_equality,u
