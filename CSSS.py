@@ -165,10 +165,9 @@ class CSSS:
         dual_objective=[]
         norm_resid_equality=[]
         aggregateSignalVector=np.array([[elem] for elem in self.aggregateSignal])
-        rel_tolarance=RELTOL*np.mean(aggregateSignalVector)
-
+        overall_complexity=0
         if verbose:
-            print('Tolarence to aggSignal '+str(rel_tolarance))
+            print('Verbose on')
         for k in range(0, MaxIter):
             for name, model in self.models.items():
                 if k==0:
@@ -179,6 +178,7 @@ class CSSS:
                     #model['admmTheta']=cvp.Variable(model['order'],1)
                     y=np.zeros((self.N,1))
                     u=(1/rho)*y
+                    overall_complexity=overall_complexity+model['order']
                 else:
                     ### Update each source by keeping the other sources constant
                     obj=0
@@ -204,9 +204,8 @@ class CSSS:
                             if model['ub'] is not None:
                                 con.append(source_update <= model['ub'])
                             sum_sources = sum_sources + source_update
+                            obj=cvp.sum_squares(residuals) * model['alpha']
 
-                        modelObj =  cvp.sum_squares(residuals) * model['alpha']
-                        obj = obj + modelObj
                     obj=obj+(rho/2)*cvp.sum_squares(sum_sources-aggregateSignalVector+u)
                     prob = cvp.Problem(cvp.Minimize(obj),con)
                     last_obj=prob.solve()
@@ -214,7 +213,7 @@ class CSSS:
                     ## keep diff for tolerance
                     source_update_diff=source_update.value-self.models[name]['admmSource']
                     self.models[name]['admmSource']=source_update.value
-                    self.models[name]['admmTheta']=theta_update.value
+                    #self.models[name]['admmTheta']=theta_update.value
 
             if k==0:
                 if verbose:
@@ -225,11 +224,11 @@ class CSSS:
                 u=u+(sum_sources-aggregateSignalVector).value
 
                 norm_resid=cvp.norm(sum_sources-aggregateSignalVector).value
-                eps_pri = np.sqrt(self.N)*ABSTOL + RELTOL*max(np.linalg.norm(sum_sources.value),np.linalg.norm(-aggregateSignalVector));
+                eps_pri = np.sqrt(overall_complexity)*ABSTOL + RELTOL*max(np.linalg.norm(sum_sources.value),np.linalg.norm(-aggregateSignalVector));
                 norm_resid_equality.append(norm_resid)
 
                 s_norm=np.linalg.norm(-rho*source_update_diff)
-                eps_dual= np.sqrt(self.N)*ABSTOL + RELTOL*np.linalg.norm(rho*u);
+                eps_dual= np.sqrt(overall_complexity)*ABSTOL + RELTOL*np.linalg.norm(rho*u);
 
 
                 if (verbose):
