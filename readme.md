@@ -6,7 +6,7 @@ CSSS is the disaggregation of a time series of source signals from observations 
 ## Objects
 The CSSS package is built upon the CSSS object class, which allows users to fully specify and fit a problem.
 
-A CSSS objest is initailized with only a source signal for disaggregation, in this case the numpy array, Y.
+A CSSS object is initialized with only a source signal for disaggregation, in this case the numpy array, Y.
 ```python
 import CSSSpy
 CSSSobject = CSSSpy.CSSS(Y)
@@ -46,7 +46,7 @@ CSSSobject.addSource(X1, name = 'y1', regularizeTheta=customReg)  ## Add a model
 #### Source Regularization
 The `regularizeSource` input to `addSource` defines the $g_i()$ term for the source and takes either a string or a function. Strings define standard regularizations and currently only take "diff1_ss" for sum of the squared differenced source signal. `gamma` is a parameter for linearly scaling the regularization term in the overall objective function.
 ```python
-CSSSobject.addSource(X1, name = 'y1', regularizeSource='diffss', beta = .1)  ## Add a model for source signal y1
+CSSSobject.addSource(X1, name = 'y1', regularizeSource='diff1_ss', beta = .1)  ## Add a model for source signal y1
 ```
 
 If inputing a custom function to regularize the source, the function must input a vector of cvxpy variables and output a scalar that goes into the objective function, and must be convex. The `gamma` term can still be used to scale this function.
@@ -61,6 +61,14 @@ CSSSobject.addSource(X1, name = 'y1', regularizeSource=customReg)  ## Add a mode
 ```
 
 #### Anatomy of a source model
+The `model` attribute of the `CSSS` object, includes the following fields:
+`name`: Name of the model, can be set, or defaults to the source count
+`source`: The disaggregated source
+`alpha`: Scaling parameter for the $\ell_i()$ function to weight the cost function of residuals.
+`lb`: Signifies a lower bound for a box constraint on the source. Default is `None`
+`ub`: Signifies an upper bound for a box constraint on the source. Default is `None`
+`theta`: Model parameters for the individual source, constructed by `addSource`
+`costFunction`: Model cost function as inputted to `addSource`. Currently supports `sse`, `l2` and `l1`
 TODO.  Inlcude all attributes of a source, how to acceess the cvxpy variables to add constraints etc.
 
 ### Adding Constraints
