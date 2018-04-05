@@ -67,7 +67,7 @@ class CSSS:
         elif costFunction.lower() == 'l1':
             residuals = (model['source'] - model['regressor'] * model['theta'])
             modelObj =  cvp.norm(residuals,1) * model['alpha']
-        elif constFunction.lower()=='l2':
+        elif costFunction.lower()=='l2':
             residuals = (model['source'] - model['regressor'] * model['theta'])
             modelObj =  cvp.norm(residuals,2) * model['alpha']
         else:
@@ -160,7 +160,7 @@ class CSSS:
 
         ## Solve problem
         prob = cvp.Problem(cvp.Minimize(obj), con)
-        prob.solve()
+        return prob.solve()
 
 
     def admmSolve(self,rho, MaxIter=500,ABSTOL= 1e-4,RELTOL=1e-1, verbose=False):
