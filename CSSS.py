@@ -14,16 +14,12 @@ class CSSS:
 
     def addSource(self, regressor, name = None,
                   costFunction='sse',alpha = 1,      # Cost function for fit to regressors, alpha is a scalar multiplier
-                  regularizeTheta='None', beta = 1,  # Cost function for parameter regularization, beta is a scalar multiplier
-                  regularizeSource='None', gamma = 1, # Cost function for signal smoothing, gamma is a scalar multiplier
+                  regularizeTheta=None, beta = 1,  # Cost function for parameter regularization, beta is a scalar multiplier
+                  regularizeSource=None, gamma = 1, # Cost function for signal smoothing, gamma is a scalar multiplier
                   lb=None, # Lower bound on source
                   ub=None # Upper bound on source
                  ):
         ### This is a method to add a new source
-
-        ## TO DO
-        # Regularize theta
-        # Regularize source signal
 
         self.modelcounter += 1   # Increment model counter
 
@@ -68,49 +64,61 @@ class CSSS:
         if costFunction.lower() == 'sse':
             residuals = (model['source'] - model['regressor'] * model['theta'])
             modelObj =  cvp.sum_squares(residuals) * model['alpha']
-
-
+        elif costFunction.lower() == 'l1':
+            residuals = (model['source'] - model['regressor'] * model['theta'])
+            modelObj =  cvp.norm(residuals,1) * model['alpha']
+        elif costFunction.lower()=='l2':
+            residuals = (model['source'] - model['regressor'] * model['theta'])
+            modelObj =  cvp.norm(residuals,2) * model['alpha']
+        else:
+            raise ValueError('{} wrong option, use "sse","l2" or "l1"'.format(costFunction))
         ## Define cost function to regularize theta ****************
         # ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *
         # Check that beta is scalar or of length of number of parameters.
         beta = np.array(beta)
         if beta.size not in [1, model['order']]:
-            raise NameError('beta must be scalar or vector with one element for each regressor')
+            raise ValueError('Beta must be scalar or vector with one element for each regressor')
 
-        if callable(regularizeTheta):
-            ## User can input their own function to regularize theta.
-            # Must input a cvxpy variable vector and output a scalar
-            # or a vector with one element for each parameter.
+        if regularizeTheta is not None:
+            if callable(regularizeTheta):
+                ## User can input their own function to regularize theta.
+                # Must input a cvxpy variable vector and output a scalar
+                # or a vector with one element for each parameter.
 
-            ## TODO: TRY CATCH TO ENSURE regularizeTheta WORKS AND RETURNS SCALAR
-            regThetaObj = regularizeTheta(model['theta']) * beta
-        elif regularizeTheta.lower() == 'l2':
-            ## Sum square errors.
-            regThetaObj = cvp.norm(model['theta'] * beta)
-        elif regularizeTheta.lower() == 'l1':
-            regThetaObj = cvp.norm(model['theta'] * beta, 1)
+                ## TODO: TRY CATCH TO ENSURE regularizeTheta WORKS AND RETURNS SCALAR
+                try:
+                    regThetaObj = regularizeTheta(model['theta']) * beta
+                except:
+                    raise ValueError('Check custom regularizer for model {}'.format(model['name']))
+                if regThetaObj.size[0]* regThetaObj.size[1] != 1:
+                    raise ValueError('Check custom regularizer for model {}, make sure it returns a scalar'.format(model['name']))
+
+            elif regularizeTheta.lower() == 'l2':
+                ## Sum square errors.
+                regThetaObj = cvp.norm(model['theta'] * beta)
+            elif regularizeTheta.lower() == 'l1':
+                regThetaObj = cvp.norm(model['theta'] * beta, 1)
         else:
-            print('Setting theta reg cost to 0')
+            print('No regularization')
             regThetaObj = 0
-        ### ******* TO DO: ADD MORE MODEL FORMS.
 
         ## Define cost function to regularize source signal ****************
         # ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *
         # Check that gamma is scalar
         gamma = np.array(gamma)
         if gamma.size != 1:
-            raise NameError('gamma must be scalar')
+            raise NameError('Gamma must be scalar')
 
         ## Calculate regularization.
-        if callable(regularizeSource):
-            ## User can input their own function to regularize the source signal.
-            # Must input a cvxpy variable vector and output a scalar.
-            regSourceObj = regularizeSource(model['source']) * gamma
-        elif regularizeSource.lower() == 'diff1_ss':
-            regSourceObj = cvp.sum_squares(cvp.diff(model['source'])) * gamma
+        if regularizeTheta is not None:
+            if callable(regularizeSource):
+                ## User can input their own function to regularize the source signal.
+                # Must input a cvxpy variable vector and output a scalar.
+                regSourceObj = regularizeSource(model['source']) * gamma
+            elif regularizeSource.lower() == 'diff1_ss':
+                regSourceObj = cvp.sum_squares(cvp.diff(model['source'])) * gamma
         else:
             regSourceObj = 0
-        ### ******* TO DO: ADD MORE MODEL FORMS.
 
 
         ## Sum total model objective
@@ -118,12 +126,10 @@ class CSSS:
 
         ## Append model to models list
         self.models[name]= model
-        return None
 
     def addConstraint(self, constraint):
         ### This is a method to add a new source
         self.constraints.append(constraint)
-        return None
 
     def constructSolve(self):
         ## This method constructs and solves the optimization
@@ -142,15 +148,20 @@ class CSSS:
         for name, model in self.models.items():
             obj = obj + model['obj']
             sum_sources = sum_sources + model['source']
+            ### ADD lb and ub constraints on individual source signal.
+            if model['lb'] is not None:
+                con.append(model['source'] >= model['lb'])
+            if model['ub'] is not None:
+                con.append(model['source'] <= model['ub'])
+
 
         ## Append the constraint that the sum of sources must equal aggergate signal
         con.append(self.aggregateSignal == sum_sources)
 
         ## Solve problem
         prob = cvp.Problem(cvp.Minimize(obj), con)
-        prob.solve()
+        return prob.solve()
 
-        return None
 
     def admmSolve(self,rho, MaxIter=500,ABSTOL= 1e-4,RELTOL=1e-1, verbose=False):
         ### This method constructs and solves the optimization using ADMM
