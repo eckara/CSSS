@@ -110,7 +110,7 @@ class CSSS:
             raise NameError('Gamma must be scalar')
 
         ## Calculate regularization.
-        if regularizeTheta is not None:
+        if regularizeSource is not None:
             if callable(regularizeSource):
                 ## User can input their own function to regularize the source signal.
                 # Must input a cvxpy variable vector and output a scalar.
