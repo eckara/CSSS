@@ -1,0 +1,5 @@
+# Data downloaded from other sources
+data/*
+
+# Keys to download data
+keys/*
