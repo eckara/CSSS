@@ -13,14 +13,13 @@ class CSSS:
 
 
     def addSource(self, regressor, name = None,
-                  costFunction='sse',alpha = 1,      # Cost function for fit to regressors, alpha is a scalar multiplier
-                  regularizeTheta=None, beta = 1,  # Cost function for parameter regularization, beta is a scalar multiplier
-                  regularizeSource=None, gamma = 1, # Cost function for signal smoothing, gamma is a scalar multiplier
+                  costFunction='sse',alpha = 1,      # Cost function for fit to regressors, alpha is a scalar multiplier or a vector multiplier of length N
+                  regularizeTheta=None, beta = 1,    # Cost function for parameter regularization, beta is a scalar multiplier
+                  regularizeSource=None, gamma = 1,  # Cost function for signal smoothing, gamma is a scalar multiplier
                   lb=None, # Lower bound on source
-                  ub=None # Upper bound on source
+                  ub=None  # Upper bound on source
                  ):
         ### This is a method to add a new source
-
         self.modelcounter += 1   # Increment model counter
 
         ## Write model name if it doesn't exist.
@@ -29,10 +28,10 @@ class CSSS:
 
         ## Instantiate a dictionary of model terms
         model = {}
-        model['name'] = name
+        model['name']  = name
         model['alpha'] = alpha
-        model['lb']=lb
-        model['ub']=ub
+        model['lb']    = lb
+        model['ub']    = ub
 
         ## Check regressor shape
         regressor = np.array(regressor)
@@ -59,73 +58,94 @@ class CSSS:
         model['source']    = cvp.Variable(self.N,1)
         model['theta']     = cvp.Variable(model['order'],1)
         model['costFunction'] = costFunction
-
-        ## Define objective function to fit model to regressors
-        if costFunction.lower() == 'sse':
-            residuals = (model['source'] - model['regressor'] * model['theta'])
-            modelObj =  cvp.sum_squares(residuals) * model['alpha']
-        elif costFunction.lower() == 'l1':
-            residuals = (model['source'] - model['regressor'] * model['theta'])
-            modelObj =  cvp.norm(residuals,1) * model['alpha']
-        elif costFunction.lower()=='l2':
-            residuals = (model['source'] - model['regressor'] * model['theta'])
-            modelObj =  cvp.norm(residuals,2) * model['alpha']
-        else:
-            raise ValueError('{} wrong option, use "sse","l2" or "l1"'.format(costFunction))
-        ## Define cost function to regularize theta ****************
-        # ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *
-        # Check that beta is scalar or of length of number of parameters.
-        beta = np.array(beta)
-        if beta.size not in [1, model['order']]:
-            raise ValueError('Beta must be scalar or vector with one element for each regressor')
-
-        if regularizeTheta is not None:
-            if callable(regularizeTheta):
-                ## User can input their own function to regularize theta.
-                # Must input a cvxpy variable vector and output a scalar
-                # or a vector with one element for each parameter.
-
-                ## TODO: TRY CATCH TO ENSURE regularizeTheta WORKS AND RETURNS SCALAR
-                try:
-                    regThetaObj = regularizeTheta(model['theta']) * beta
-                except:
-                    raise ValueError('Check custom regularizer for model {}'.format(model['name']))
-                if regThetaObj.size[0]* regThetaObj.size[1] != 1:
-                    raise ValueError('Check custom regularizer for model {}, make sure it returns a scalar'.format(model['name']))
-
-            elif regularizeTheta.lower() == 'l2':
-                ## Sum square errors.
-                regThetaObj = cvp.norm(model['theta'] * beta)
-            elif regularizeTheta.lower() == 'l1':
-                regThetaObj = cvp.norm(model['theta'] * beta, 1)
-        else:
-            print('No regularization')
-            regThetaObj = 0
-
-        ## Define cost function to regularize source signal ****************
-        # ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *
-        # Check that gamma is scalar
-        gamma = np.array(gamma)
-        if gamma.size != 1:
-            raise NameError('Gamma must be scalar')
-
-        ## Calculate regularization.
-        if regularizeSource is not None:
-            if callable(regularizeSource):
-                ## User can input their own function to regularize the source signal.
-                # Must input a cvxpy variable vector and output a scalar.
-                regSourceObj = regularizeSource(model['source']) * gamma
-            elif regularizeSource.lower() == 'diff1_ss':
-                regSourceObj = cvp.sum_squares(cvp.diff(model['source'])) * gamma
-        else:
-            regSourceObj = 0
-
-
-        ## Sum total model objective
-        model['obj'] = modelObj + regThetaObj + regSourceObj
+        model['regularizeTheta'] = regularizeTheta
+        model['beta'] = beta
+        model['regularizeSource'] = regularizeSource
+        model['gamma'] = gamma
 
         ## Append model to models list
         self.models[name]= model
+        self.updateSourceObj(name)
+
+    def updateSourceObj(self, sourcename):
+        if sourcename.lower() == 'all':
+            for name in self.models.keys():
+                self.updateSourceObj(name)
+        else:
+            model = self.models[sourcename]
+
+            ## Define objective function to fit model to regressors
+            ## **CHANGE MT: I moved the alpha variable to be inside the norms so that
+            ## it can be time varying.  I'm adding a check above to ensure that alpha is
+            ## a scalar or a vector of length N.
+            if model['costFunction'].lower() == 'sse':
+                residuals = (model['source'] - model['regressor'] * model['theta'])
+                modelObj =  cvp.sum_squares( cvp.mul_elemwise( model['alpha'] ** .5 , residuals ) )
+            elif model['costFunction'].lower() == 'l1':
+                residuals = (model['source'] - model['regressor'] * model['theta'])
+                modelObj =  cvp.norm( cvp.mul_elemwise( model['alpha'] , residuals ) ,1)
+            elif model['costFunction'].lower()=='l2':
+                residuals = (model['source'] - model['regressor'] * model['theta'])
+                modelObj =  cvp.norm( cvp.mul_elemwise( model['alpha'] , residuals ) ,2)
+            else:
+                raise ValueError('{} wrong option, use "sse","l2" or "l1"'.format(costFunction))
+            ## Define cost function to regularize theta ****************
+            # ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *
+            # Check that beta is scalar or of length of number of parameters.
+            model['beta'] = np.array(model['beta'])
+            if model['beta'].size not in [1, model['order']]:
+                raise ValueError('Beta must be scalar or vector with one element for each regressor')
+
+            if model['regularizeTheta'] is not None:
+                if callable(model['regularizeTheta']):
+                    ## User can input their own function to regularize theta.
+                    # Must input a cvxpy variable vector and output a scalar
+                    # or a vector with one element for each parameter.
+
+                    ## TODO: TRY CATCH TO ENSURE regularizeTheta WORKS AND RETURNS SCALAR
+                    try:
+                        regThetaObj = model['regularizeTheta'](model['theta']) * model['beta']
+                    except:
+                        raise ValueError('Check custom regularizer for model {}'.format(model['name']))
+                    if regThetaObj.size[0]* regThetaObj.size[1] != 1:
+                        raise ValueError('Check custom regularizer for model {}, make sure it returns a scalar'.format(model['name']))
+
+                elif model['regularizeTheta'].lower() == 'l2':
+                    ## Sum square errors.
+                    regThetaObj = cvp.norm(model['theta'] * model['beta'])
+                elif model['regularizeTheta'].lower() == 'l1':
+                    regThetaObj = cvp.norm(model['theta'] * model['beta'], 1)
+            else:
+                regThetaObj = 0
+
+            ## Define cost function to regularize source signal ****************
+            # ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *
+            # Check that gamma is scalar
+            model['gamma'] = np.array(model['gamma'])
+            if model['gamma'].size != 1:
+                raise NameError('Gamma must be scalar')
+
+            ## Calculate regularization.
+            if model['regularizeSource'] is not None:
+                if callable(model['regularizeSource']):
+                    ## User can input their own function to regularize the source signal.
+                    # Must input a cvxpy variable vector and output a scalar.
+                    regSourceObj = model['regularizeSource'](model['source']) * model['gamma']
+                elif model['regularizeSource'].lower() == 'diff1_ss':
+                    regSourceObj = cvp.sum_squares(cvp.diff(model['source'])) * model['gamma']
+                else:
+                    raise Exception('regularizeSource must be a callable method, \`diff1_ss\`, or None')
+            else:
+                regSourceObj = 0
+
+
+            ## Sum total model objective
+            model['obj'] = modelObj + regThetaObj + regSourceObj
+
+            ## Append model to models list
+            self.models[sourcename] = model
+
+
 
     def addConstraint(self, constraint):
         ### This is a method to add a new source
@@ -213,6 +233,10 @@ class CSSS:
                                 con.append(source_update <= model['ub'])
 
                             sum_sources = sum_sources + source_update
+
+                            ## MT TODO
+                            # Why redefine the objective here?  Each source already has an
+                            # objective defiend in the class, model_sub.obj.
                             obj=cvp.sum_squares(residuals) * model['alpha']
 
                     obj=obj+(rho/2)*cvp.sum_squares(sum_sources-aggregateSignalVector+u)
