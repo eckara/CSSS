@@ -4,6 +4,12 @@ data/*
 # Data downloaded from other sources
 data/*
 
+# No .csv or .pickle data
+*.csv
+*.pickle
+*.pkl
+*.p
+
 # Keys to download data
 >>>>>>> mtbranch
 keys/*
