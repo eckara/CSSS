@@ -117,6 +117,10 @@ class CSSS:
                 regSourceObj = regularizeSource(model['source']) * gamma
             elif regularizeSource.lower() == 'diff1_ss':
                 regSourceObj = cvp.sum_squares(cvp.diff(model['source'])) * gamma
+            elif regularizeSource.lower() == 'diff_l1':
+                regSourceObj = cvp.norm(cvp.diff(model['source']),1) * gamma
+            elif regularizeSource.lower() == 'diff_l2':
+                regSourceObj = cvp.norm(cvp.diff(model['source']),2) * gamma
         else:
             regSourceObj = 0
 
@@ -131,7 +135,7 @@ class CSSS:
         ### This is a method to add a new source
         self.constraints.append(constraint)
 
-    def constructSolve(self):
+    def constructSolve(self, Solver=None, Verbose=None, Max_iters=None):
         ## This method constructs and solves the optimization
 
         ## Initialize objective function and modeled aggregate signal as 0
@@ -160,8 +164,8 @@ class CSSS:
 
         ## Solve problem
         prob = cvp.Problem(cvp.Minimize(obj), con)
-        return prob.solve()
-
+        prob.solve(solver=Solver, verbose=Verbose, max_iters=Max_iters)
+        return prob
 
     def admmSolve(self,rho, MaxIter=500,ABSTOL= 1e-4,RELTOL=1e-1, verbose=False):
         ### This method constructs and solves the optimization using ADMM
