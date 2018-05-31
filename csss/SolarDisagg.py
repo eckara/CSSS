@@ -312,14 +312,14 @@ class SolarDisagg_IndvHome(CSSS.CSSS):
         return(None)
 
 class SolarDisagg_IndvHome_Realtime(CSSS.CSSS):
-    def __init__(self, sdmod, aggregateLoad, solarregressors, loadregressors, tuningregressors = None):
+    def __init__(self, sdmod, aggregateNetLoad, solarregressors, loadregressors, tuningregressors = None):
         ## Inputs
         # netloads:         np.array of net loads at each home, with columns corresponding to entries of "names" if available.
         # solarregressors:  np.array of solar regressors (N_s X T)
         # loadregressors:   np.array of load regressors (N_l x T)
-        CSSS.CSSS.__init__(self, aggregateLoad)
+        CSSS.CSSS.__init__(self, aggregateNetLoad)
 
-        self.N = len(aggregateLoad)
+        self.N = len(aggregateNetLoad)
         self.M = sdmod.M
 
         ## If no tuning regressors are input, use an intercept only
