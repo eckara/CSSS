@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-data/*
-=======
 # Data downloaded from other sources
 data/*
 
@@ -11,5 +8,4 @@ data/*
 *.p
 
 # Keys to download data
->>>>>>> mtbranch
 keys/*
