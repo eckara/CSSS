@@ -11,13 +11,12 @@ class CSSS:
         self.constraints      = []  # Additional constraints
         self.N                = len(aggregateSignal) # Length of aggregate signal
 
-
     def addSource(self, regressor, name = None,
                   costFunction='sse',alpha = 1,      # Cost function for fit to regressors, alpha is a scalar multiplier or a vector multiplier of length N
                   regularizeTheta=None, beta = 1,    # Cost function for parameter regularization, beta is a scalar multiplier
                   regularizeSource=None, gamma = 1,  # Cost function for signal smoothing, gamma is a scalar multiplier
-                  lb=None, # Lower bound on source
-                  ub=None  # Upper bound on source
+                  lb = None, # Lower bound on source
+                  ub = None  # Upper bound on source
                  ):
         ### This is a method to add a new source
         self.modelcounter += 1   # Increment model counter
@@ -145,8 +144,6 @@ class CSSS:
             ## Append model to models list
             self.models[sourcename] = model
 
-
-
     def addConstraint(self, constraint):
         ### This is a method to add a new source
         self.constraints.append(constraint)
@@ -181,7 +178,6 @@ class CSSS:
         ## Solve problem
         prob = cvp.Problem(cvp.Minimize(obj), con)
         return prob.solve()
-
 
     def admmSolve(self,rho, MaxIter=500,ABSTOL= 1e-4,RELTOL=1e-1, verbose=False):
         ### This method constructs and solves the optimization using ADMM
@@ -275,3 +271,10 @@ class CSSS:
                 #print(np.transpose(y))
                 #print(k, dual_objective)
         return dual_objective,norm_resid_equality,u
+
+    def fixThetas(self):
+        ## Fixes theta to current value and removes it as a decision variable
+        ## This is creates the "real time problem.""
+        for name, m in self.models.items():
+            m['theta'] = m['theta'].value
+        self.updateSourceObj('all')
