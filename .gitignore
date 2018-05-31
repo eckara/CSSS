@@ -1,5 +1,6 @@
 # Data downloaded from other sources
 data/*
+Solar_Disaggregation_Analysis/data/*
 
 # No .csv or .pickle data
 *.csv
