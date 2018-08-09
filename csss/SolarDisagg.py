@@ -478,6 +478,33 @@ class SolarDisagg_IndvHome_Realtime(CSSS.CSSS):
         return(None)
 
 
+def createTempInput(temp, size, minTemp=None, maxTemp=None, intercept=False):
+    if (minTemp is None):
+        minTemp = min(temp)
+    if maxTemp is None:
+        maxTemp = max(temp)
+    minBound = int(np.floor(minTemp / size)) * size
+    maxBound = int(np.floor(maxTemp / size)) * size + size
+
+    rangeCount = int((maxBound - minBound) / size)
+    result = np.zeros((len(temp), rangeCount + intercept))
+    t = 0
+    for elem in temp:
+        fullRanges = min(int(np.floor((elem - minBound) / size)), rangeCount - 1)
+        fullRanges = max(0, fullRanges)
+        bound = (minBound + fullRanges * size)
+        lastRange = elem - bound
+        res = [size for elem in range(fullRanges)]
+        res.append(lastRange)
+        for var in range(rangeCount - fullRanges - 1):
+            res.append(0)
+        if intercept:
+            res.append(1)  ## Include an intercept
+
+        result[t, :] = np.array(res)
+        t += 1
+    return minTemp, maxTemp, result
+
 
 ## Function for a cyclic convolution filter, because apparantely there isn't one already in python
 def convolve_cyc(x, filt, left = True):
