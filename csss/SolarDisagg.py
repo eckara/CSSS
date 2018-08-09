@@ -249,7 +249,7 @@ class SolarDisagg_IndvHome(CSSS.CSSS):
 
             m['var_lb'] = (mean_abs_nl * var_lb_fraction) ** 2      ### Lower bound on variance
 
-        ## Build model to predict aggregate load
+        ## Build model to predict aggregate net load
         model = LR()
         X = np.hstack([self.loadRegressors, self.solarRegressors])
         model.fit(y = self.aggregateSignal, X = X)
