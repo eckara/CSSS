@@ -1,10 +1,9 @@
 # Data downloaded from other sources
 data/*
 Solar_Disaggregation_Analysis/data/*
-git s
 
 # Keys to download data
-keys/*
+keys/*.txt
 
 
 
