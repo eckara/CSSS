@@ -1,3 +1,6 @@
+[comment]: # (Latex is rendered using https://www.codecogs.com/latex/eqneditor.php with the following settings)
+[comment]: # (png, Latin Modern, 10pt Normal, 100, Transparent, Inline, Compressed)
+
 # Contextually Supervised Source Separation (CSSS)
 This packages deploys contextually supervised source separation (CSSS) techniques in python. CSSS was originally described by Wytock and Kolter in [P1](http://www.aaai.org/ocs/index.php/AAAI/AAAI14/paper/download/8629/8460) and we follow their original notation in this documentation.  We also include updates and extensions of the original CSSS method as part of our applied work ([P2](https://www.sciencedirect.com/science/article/pii/S2352467717301169),[P3](http://delivery.acm.org/10.1145/3000000/2996419/p259-kara.pdf?ip=73.116.42.185&id=2996419&acc=CHORUS&key=4D4702B0C3E38B35%2E4D4702B0C3E38B35%2E4D4702B0C3E38B35%2E6D218144511F3437&__acm__=1521136405_682443df836c2c91d837ba9d2195493b)). 	
 
