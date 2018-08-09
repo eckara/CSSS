@@ -65,14 +65,16 @@ CSSSobject.addSource(X1, name = 'y1', regularizeSource=customReg)  ## Add a mode
 
 #### Anatomy of a source model
 The `model` attribute of the `CSSS` object, includes the following fields:
-`name`: Name of the model, can be set, or defaults to the source count
-`source`: The disaggregated source
-`alpha`: Scaling parameter for the ![](https://latex.codecogs.com/png.latex?%5Cinline%20%5Cdpi%7B100%7D%20%5Cell_i%28%29) function to weight the cost function of residuals.
-`lb`: Signifies a lower bound for a box constraint on the source. Default is `None`
-`ub`: Signifies an upper bound for a box constraint on the source. Default is `None`
-`theta`: Model parameters for the individual source, constructed by `addSource`
-`costFunction`: Model cost function as inputted to `addSource`. Currently supports `sse`, `l2` and `l1`
-TODO.  Inlcude all attributes of a source, how to acceess the cvxpy variables to add constraints etc.
+
+- `name`: Name of the model, can be set, or defaults to the source count
+- `source`: The disaggregated source
+- `alpha`: Scaling parameter for the ![](https://latex.codecogs.com/png.latex?%5Cinline%20%5Cdpi%7B100%7D%20%5Cell_i%28%29) function to weight the cost function of residuals.
+- `lb`: Signifies a lower bound for a box constraint on the source. Default is `None`
+- `ub`: Signifies an upper bound for a box constraint on the source. Default is `None`
+- `theta`: Model parameters for the individual source, constructed by `addSource`
+- `costFunction`: Model cost function as inputted to `addSource`. Currently supports `sse`, `l2` and `l1`
+
+TODO.  Include all attributes of a source, how to acceess the cvxpy variables to add constraints etc.
 
 ### Adding Constraints
 
