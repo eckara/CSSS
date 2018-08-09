@@ -20,7 +20,7 @@ CSSSobject = CSSSpy.CSSS(Y)
 - `modelcounter` is the total number of source models included.
 
 ### Adding Sources
-The method CSSS.addSource adds a model for a source signal. By default, the model cost function is the sum of square errors, ![](https://latex.codecogs.com/gif.latex?%5Cleft%7C%5Cleft%7C%20y_i%20-%20X_i%20%5Ctheta_i%20%5Cright%7C%5Cright%7C_2%5E2), and there is no regularization of the source signal or the parameters. Alternate options for this form (i.e. other norms) will be included in future versions of this package.
+The method CSSS.addSource adds a model for a source signal. By default, the model cost function is the sum of square errors, ![](https://latex.codecogs.com/png.latex?%5Cinline%20%5Cdpi%7B100%7D%20%5Cleft%7C%5Cleft%7C%20y_i%20-%20X_i%20%5Ctheta_i%20%5Cright%7C%5Cright%7C_2%5E2), and there is no regularization of the source signal or the parameters. Alternate options for this form (i.e. other norms) will be included in future versions of this package.
 ```python
 CSSSobject.addSource(X1, name = 'y1')  ## Add a model for source signal y1
 CSSSobject.addSource(X2, name = 'y2')  ## Add a model for source signal y2
