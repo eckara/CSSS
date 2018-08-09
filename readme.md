@@ -28,7 +28,7 @@ CSSSobject.addSource(X2, name = 'y2')  ## Add a model for source signal y2
 The optional parameter `alpha` is a scalar that weights the cost of the signal in the objective function. In the following example, costs associated with the errors in the model for `y1` will be weighted twice that of those for `y2`.
 
 #### Parameter Regularization
-The `regularizeTheta` input to `addSource` defines the ![](https://latex.codecogs.com/gif.latex?h_i%28%29) term for the source and takes either a string or a function. Strings define standard regularizations and can take "ss" for sum of squares, 'l1' for l1-norms, and 'l2' for l2-norms. `beta` is a parameter for linearly scaling the regularization term in the overall objective function. `beta` may take a scalar or a vector value, if a vector there must be one element for element of ![](https://latex.codecogs.com/gif.latex?%24%5Ctheta_i%24).
+The `regularizeTheta` input to `addSource` defines the ![](https://latex.codecogs.com/png.latex?%5Cinline%20%5Cdpi%7B80%7D%20h_i%28%29) term for the source and takes either a string or a function. Strings define standard regularizations and can take "ss" for sum of squares, 'l1' for l1-norms, and 'l2' for l2-norms. `beta` is a parameter for linearly scaling the regularization term in the overall objective function. `beta` may take a scalar or a vector value, if a vector there must be one element for element of ![](https://latex.codecogs.com/png.latex?%5Cinline%20%5Cdpi%7B80%7D%20%5Ctheta_i).
 ```python
 CSSSobject.addSource(X1, name = 'y1', regularizeTheta='L2', beta = 2)  ## Add a model for source signal y1
 ```
@@ -44,7 +44,7 @@ CSSSobject.addSource(X1, name = 'y1', regularizeTheta=customReg)  ## Add a model
 ```
 
 #### Source Regularization
-The `regularizeSource` input to `addSource` defines the ![](https://latex.codecogs.com/gif.latex?g_i%28%29) term for the source and takes either a string or a function. Strings define standard regularizations and currently only take "diff1_ss" for sum of the squared differenced source signal. `gamma` is a parameter for linearly scaling the regularization term in the overall objective function.
+The `regularizeSource` input to `addSource` defines the ![](https://latex.codecogs.com/png.latex?%5Cinline%20%5Cdpi%7B80%7D%20g_i%28%29) term for the source and takes either a string or a function. Strings define standard regularizations and currently only take "diff1_ss" for sum of the squared differenced source signal. `gamma` is a parameter for linearly scaling the regularization term in the overall objective function.
 ```python
 CSSSobject.addSource(X1, name = 'y1', regularizeSource='diff1_ss', beta = .1)  ## Add a model for source signal y1
 ```
@@ -64,7 +64,7 @@ CSSSobject.addSource(X1, name = 'y1', regularizeSource=customReg)  ## Add a mode
 The `model` attribute of the `CSSS` object, includes the following fields:
 `name`: Name of the model, can be set, or defaults to the source count
 `source`: The disaggregated source
-`alpha`: Scaling parameter for the ![](https://latex.codecogs.com/gif.latex?%5Cell_i%28%29) function to weight the cost function of residuals.
+`alpha`: Scaling parameter for the ![](https://latex.codecogs.com/png.latex?%5Cinline%20%5Cdpi%7B80%7D%20%5Cell_i%28%29) function to weight the cost function of residuals.
 `lb`: Signifies a lower bound for a box constraint on the source. Default is `None`
 `ub`: Signifies an upper bound for a box constraint on the source. Default is `None`
 `theta`: Model parameters for the individual source, constructed by `addSource`
