@@ -7,4 +7,4 @@ requests                # required to run example notebooks
 pvlib                   # required to run example notebooks
 tables                  # Linke turbidity lookup table in pvlib requires tables
 sqlalchemy              # required to set up tutorial data, pulled from Pecan Street
-psycopg2                # required to set up tutorial data, pulled from Pecan Street
+psycopg2-binary         # required to set up tutorial data, pulled from Pecan Street
