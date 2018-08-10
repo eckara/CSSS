@@ -4,14 +4,22 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression as LR
 
 class SolarDisagg_IndvHome(CSSS.CSSS):
-    def __init__(self, netloads, solarregressors, loadregressors, tuningregressors = None, names = None):
-        ## Inputs
-        # netloads:         np.array of net loads at each home, with columns corresponding to entries of "names" if available.
-        # solarregressors:  np.array of solar regressors (N_s X T)
-        # loadregressors:   np.array of load regressors (N_l x T)
+    def __init__(self, netloads, solarregressors, loadregressors, agg_net_load=None, tuningregressors=None, names=None):
+        """
+
+        :param netloads:        np.array of net loads at each home, with columns corresponding to entries of "names" if
+                                available.
+        :param solarregressors: np.array of solar regressors (N_s X T)
+        :param loadregressors:  np.array of load regressors (N_l x T)
+        :param agg_net_load:    if provided, 1D array of aggregate net load signal, typically measured at a substation
+                                otherwise, calculated from individual net load signals
+        :param tuningregressors:
+        :param names:
+        """
 
         ## Find aggregate net load, and initialize problem.
-        agg_net_load = np.sum(netloads, axis = 1)
+        if agg_net_load is None:
+            agg_net_load = np.sum(netloads, axis = 1)
         CSSS.CSSS.__init__(self, agg_net_load)
 
         ## If no names are input, create names based on id in vector.
