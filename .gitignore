@@ -5,7 +5,8 @@ Solar_Disaggregation_Analysis/data/*
 # Keys to download data
 keys/*.txt
 
-
+# Scratch work
+scratch_work/
 
 # Created by https://www.gitignore.io/api/data,python,pycharm,database,jupyternotebook
 
