@@ -511,6 +511,56 @@ def createTempInput(temp, size, minTemp=None, maxTemp=None, intercept=False):
     return minTemp, maxTemp, result
 
 
+def createSolarDisaggIndvInputs(data, solar_proxy_ids, includes_agg_col=True):
+    """
+    Helper function to create inputs to SolarDisagg_IndvHome from a time-series csv file. This function works with the
+    data file generation script, tutorial_data_setup.py.
+
+    :param data:                A path to the csv file (probably the one created by tutorial_data_setpu.py)
+    :param solar_proxy_ids:     The site ID numbers associated with the solar proxy signals
+    :param includes_agg_col:    If true, the csv contains an aggregate net load column
+    :return:                    A dictionary mapping to the constructor for SolarDisagg_IndvHome
+    """
+    try:
+        df = pd.read_csv(data, index_col=0, header=[0, 1], parse_dates=[0])
+    except ValueError:
+        if isinstance(data, pd.DataFrame):
+            df = data
+        else:
+            print('Please input a path to a csv file or a valid Pandas DataFrame')
+            return
+
+    if isinstance(solar_proxy_ids, str):
+        solar_proxy_ids = np.load(solar_proxy_ids)
+
+    if includes_agg_col:
+        netloads = df['netload'].drop('agg', axis=1).values
+    else:
+        netloads = df['netload']
+    try:
+        solarproxy = df['gen'][solar_proxy_ids].values
+    except KeyError:
+        solarproxy = df['gen'][list(map(str, solar_proxy_ids))].values
+    if np.average(solarproxy) >= 0:
+        solarproxy *= -1                                            # generation should be negative
+
+    names = [str(d) for d in df['gen'].columns]
+
+    hod = df.index.hour.values
+    hod = np.array(pd.get_dummies(hod))
+    Tmin, Tmax, temp_regress = createTempInput(df['temperature'].values.squeeze(), 10)
+
+    data_out = {
+        'netloads':         netloads,
+        'solarregressors':  solarproxy,
+        'loadregressors':   np.hstack((hod, temp_regress)),
+        'tuningregressors': hod,
+        'names':            names
+    }
+
+    return data_out
+
+
 ## Function for a cyclic convolution filter, because apparantely there isn't one already in python
 def convolve_cyc(x, filt, left = True):
     if (len(filt) % 2) == 1:
