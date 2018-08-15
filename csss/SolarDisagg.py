@@ -511,7 +511,7 @@ def createTempInput(temp, size, minTemp=None, maxTemp=None, intercept=False):
     return minTemp, maxTemp, result
 
 
-def createSolarDisaggIndvInputs(data, solar_proxy_ids, includes_agg_col=True):
+def createSolarDisaggIndvInputs(data, home_ids, solar_proxy_ids):
     """
     Helper function to create inputs to SolarDisagg_IndvHome from a time-series csv file. This function works with the
     data file generation script, tutorial_data_setup.py.
@@ -533,18 +533,13 @@ def createSolarDisaggIndvInputs(data, solar_proxy_ids, includes_agg_col=True):
     if isinstance(solar_proxy_ids, str):
         solar_proxy_ids = np.load(solar_proxy_ids)
 
-    if includes_agg_col:
-        netloads = df['netload'].drop('agg', axis=1).values
-    else:
-        netloads = df['netload']
+    netloads = df['netload'][home_ids].values
     try:
         solarproxy = df['gen'][solar_proxy_ids].values
     except KeyError:
         solarproxy = df['gen'][list(map(str, solar_proxy_ids))].values
     if np.average(solarproxy) >= 0:
         solarproxy *= -1                                            # generation should be negative
-
-    names = [str(d) for d in df['gen'].columns]
 
     hod = df.index.hour.values
     hod = np.array(pd.get_dummies(hod))
@@ -555,7 +550,7 @@ def createSolarDisaggIndvInputs(data, solar_proxy_ids, includes_agg_col=True):
         'solarregressors':  solarproxy,
         'loadregressors':   np.hstack((hod, temp_regress)),
         'tuningregressors': hod,
-        'names':            names
+        'names':            home_ids
     }
 
     return data_out
