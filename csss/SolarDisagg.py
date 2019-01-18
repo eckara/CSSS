@@ -4,11 +4,16 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression as LR
 
 class SolarDisagg_IndvHome(CSSS.CSSS):
-    def __init__(self, netloads, solarregressors, loadregressors, tuningregressors = None, names = None):
-        ## Inputs
-        # netloads:         np.array of net loads at each home, with columns corresponding to entries of "names" if available.
-        # solarregressors:  np.array of solar regressors (N_s X T)
-        # loadregressors:   np.array of load regressors (N_l x T)
+    def __init__(self, netloads, solarregressors, loadregressors, tuningregressors=None, names=None):
+        """
+
+        :param netloads:        np.array of net loads at each home, with columns corresponding to entries of "names" if
+                                available.
+        :param solarregressors: np.array of solar regressors (N_s X T)
+        :param loadregressors:  np.array of load regressors (N_l x T)
+        :param tuningregressors:
+        :param names:
+        """
 
         ## Find aggregate net load, and initialize problem.
         agg_net_load = np.sum(netloads, axis = 1)
@@ -249,7 +254,7 @@ class SolarDisagg_IndvHome(CSSS.CSSS):
 
             m['var_lb'] = (mean_abs_nl * var_lb_fraction) ** 2      ### Lower bound on variance
 
-        ## Build model to predict aggregate load
+        ## Build model to predict aggregate net load
         model = LR()
         X = np.hstack([self.loadRegressors, self.solarRegressors])
         model.fit(y = self.aggregateSignal, X = X)
@@ -477,6 +482,78 @@ class SolarDisagg_IndvHome_Realtime(CSSS.CSSS):
 
         return(None)
 
+
+def createTempInput(temp, size, minTemp=None, maxTemp=None, intercept=False):
+    if (minTemp is None):
+        minTemp = min(temp)
+    if maxTemp is None:
+        maxTemp = max(temp)
+    minBound = int(np.floor(minTemp / size)) * size
+    maxBound = int(np.floor(maxTemp / size)) * size + size
+
+    rangeCount = int((maxBound - minBound) / size)
+    result = np.zeros((len(temp), rangeCount + intercept))
+    t = 0
+    for elem in temp:
+        fullRanges = min(int(np.floor((elem - minBound) / size)), rangeCount - 1)
+        fullRanges = max(0, fullRanges)
+        bound = (minBound + fullRanges * size)
+        lastRange = elem - bound
+        res = [size for elem in range(fullRanges)]
+        res.append(lastRange)
+        for var in range(rangeCount - fullRanges - 1):
+            res.append(0)
+        if intercept:
+            res.append(1)  ## Include an intercept
+
+        result[t, :] = np.array(res)
+        t += 1
+    return minTemp, maxTemp, result
+
+
+def createSolarDisaggIndvInputs(data, home_ids, solar_proxy_ids):
+    """
+    Helper function to create inputs to SolarDisagg_IndvHome from a time-series csv file. This function works with the
+    data file generation script, tutorial_data_setup.py.
+
+    :param data:                A path to the csv file (probably the one created by tutorial_data_setpu.py)
+    :param solar_proxy_ids:     The site ID numbers associated with the solar proxy signals
+    :param includes_agg_col:    If true, the csv contains an aggregate net load column
+    :return:                    A dictionary mapping to the constructor for SolarDisagg_IndvHome
+    """
+    try:
+        df = pd.read_csv(data, index_col=0, header=[0, 1], parse_dates=[0])
+    except ValueError:
+        if isinstance(data, pd.DataFrame):
+            df = data
+        else:
+            print('Please input a path to a csv file or a valid Pandas DataFrame')
+            return
+
+    if isinstance(solar_proxy_ids, str):
+        solar_proxy_ids = np.load(solar_proxy_ids)
+
+    netloads = df['netload'][home_ids].values
+    try:
+        solarproxy = df['gen'][solar_proxy_ids].values
+    except KeyError:
+        solarproxy = df['gen'][list(map(str, solar_proxy_ids))].values
+    if np.average(solarproxy) >= 0:
+        solarproxy *= -1                                            # generation should be negative
+
+    hod = df.index.hour.values
+    hod = np.array(pd.get_dummies(hod))
+    Tmin, Tmax, temp_regress = createTempInput(df['temperature'].values.squeeze(), 10)
+
+    data_out = {
+        'netloads':         netloads,
+        'solarregressors':  solarproxy,
+        'loadregressors':   np.hstack((hod, temp_regress)),
+        'tuningregressors': hod,
+        'names':            home_ids
+    }
+
+    return data_out
 
 
 ## Function for a cyclic convolution filter, because apparantely there isn't one already in python

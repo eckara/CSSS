@@ -1,3 +1,6 @@
+[comment]: # (Latex is rendered using https://www.codecogs.com/latex/eqneditor.php with the following settings)
+[comment]: # (png, Latin Modern, 10pt Normal, 100, Transparent, Inline, Compressed)
+
 # Contextually Supervised Source Separation (CSSS)
 This packages deploys contextually supervised source separation (CSSS) techniques in python. CSSS was originally described by Wytock and Kolter in [P1](http://www.aaai.org/ocs/index.php/AAAI/AAAI14/paper/download/8629/8460) and we follow their original notation in this documentation.  We also include updates and extensions of the original CSSS method as part of our applied work ([P2](https://www.sciencedirect.com/science/article/pii/S2352467717301169),[P3](http://delivery.acm.org/10.1145/3000000/2996419/p259-kara.pdf?ip=73.116.42.185&id=2996419&acc=CHORUS&key=4D4702B0C3E38B35%2E4D4702B0C3E38B35%2E4D4702B0C3E38B35%2E6D218144511F3437&__acm__=1521136405_682443df836c2c91d837ba9d2195493b)). 	
 
@@ -20,7 +23,7 @@ CSSSobject = CSSSpy.CSSS(Y)
 - `modelcounter` is the total number of source models included.
 
 ### Adding Sources
-The method CSSS.addSource adds a model for a source signal. By default, the model cost function is the sum of square errors, $\left|\left| y_i - X_i \theta_i \right|\right|_2^2$_, and there is no regularization of the source signal or the parameters. Alternate options for this form (i.e. other norms) will be included in future versions of this package.
+The method CSSS.addSource adds a model for a source signal. By default, the model cost function is the sum of square errors, ![](https://latex.codecogs.com/gif.latex?%5Cleft%7C%5Cleft%7C%20y_i%20-%20X_i%20%5Ctheta_i%20%5Cright%7C%5Cright%7C_2%5E2), and there is no regularization of the source signal or the parameters. Alternate options for this form (i.e. other norms) will be included in future versions of this package.
 ```python
 CSSSobject.addSource(X1, name = 'y1')  ## Add a model for source signal y1
 CSSSobject.addSource(X2, name = 'y2')  ## Add a model for source signal y2
@@ -28,7 +31,7 @@ CSSSobject.addSource(X2, name = 'y2')  ## Add a model for source signal y2
 The optional parameter `alpha` is a scalar that weights the cost of the signal in the objective function. In the following example, costs associated with the errors in the model for `y1` will be weighted twice that of those for `y2`.
 
 #### Parameter Regularization
-The `regularizeTheta` input to `addSource` defines the $h_i()$ term for the source and takes either a string or a function. Strings define standard regularizations and can take "ss" for sum of squares, 'l1' for l1-norms, and 'l2' for l2-norms. `beta` is a parameter for linearly scaling the regularization term in the overall objective function. `beta` may take a scalar or a vector value, if a vector there must be one element for element of $theta_i$.
+The `regularizeTheta` input to `addSource` defines the ![](https://latex.codecogs.com/png.latex?%5Cinline%20%5Cdpi%7B100%7D%20h_i%28%29) term for the source and takes either a string or a function. Strings define standard regularizations and can take "ss" for sum of squares, 'l1' for l1-norms, and 'l2' for l2-norms. `beta` is a parameter for linearly scaling the regularization term in the overall objective function. `beta` may take a scalar or a vector value, if a vector there must be one element for element of ![](https://latex.codecogs.com/png.latex?%5Cinline%20%5Cdpi%7B100%7D%20%5Ctheta_i).
 ```python
 CSSSobject.addSource(X1, name = 'y1', regularizeTheta='L2', beta = 2)  ## Add a model for source signal y1
 ```
@@ -44,7 +47,7 @@ CSSSobject.addSource(X1, name = 'y1', regularizeTheta=customReg)  ## Add a model
 ```
 
 #### Source Regularization
-The `regularizeSource` input to `addSource` defines the $g_i()$ term for the source and takes either a string or a function. Strings define standard regularizations and currently only take "diff1_ss" for sum of the squared differenced source signal. `gamma` is a parameter for linearly scaling the regularization term in the overall objective function.
+The `regularizeSource` input to `addSource` defines the ![](https://latex.codecogs.com/png.latex?%5Cinline%20%5Cdpi%7B100%7D%20g_i%28%29) term for the source and takes either a string or a function. Strings define standard regularizations and currently only take "diff1_ss" for sum of the squared differenced source signal. `gamma` is a parameter for linearly scaling the regularization term in the overall objective function.
 ```python
 CSSSobject.addSource(X1, name = 'y1', regularizeSource='diff1_ss', beta = .1)  ## Add a model for source signal y1
 ```
@@ -62,14 +65,16 @@ CSSSobject.addSource(X1, name = 'y1', regularizeSource=customReg)  ## Add a mode
 
 #### Anatomy of a source model
 The `model` attribute of the `CSSS` object, includes the following fields:
-`name`: Name of the model, can be set, or defaults to the source count
-`source`: The disaggregated source
-`alpha`: Scaling parameter for the $\ell_i()$ function to weight the cost function of residuals.
-`lb`: Signifies a lower bound for a box constraint on the source. Default is `None`
-`ub`: Signifies an upper bound for a box constraint on the source. Default is `None`
-`theta`: Model parameters for the individual source, constructed by `addSource`
-`costFunction`: Model cost function as inputted to `addSource`. Currently supports `sse`, `l2` and `l1`
-TODO.  Inlcude all attributes of a source, how to acceess the cvxpy variables to add constraints etc.
+
+- `name`: Name of the model, can be set, or defaults to the source count
+- `source`: The disaggregated source
+- `alpha`: Scaling parameter for the ![](https://latex.codecogs.com/png.latex?%5Cinline%20%5Cdpi%7B100%7D%20%5Cell_i%28%29) function to weight the cost function of residuals.
+- `lb`: Signifies a lower bound for a box constraint on the source. Default is `None`
+- `ub`: Signifies an upper bound for a box constraint on the source. Default is `None`
+- `theta`: Model parameters for the individual source, constructed by `addSource`
+- `costFunction`: Model cost function as inputted to `addSource`. Currently supports `sse`, `l2` and `l1`
+
+TODO.  Include all attributes of a source, how to acceess the cvxpy variables to add constraints etc.
 
 ### Adding Constraints
 
